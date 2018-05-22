@@ -53,9 +53,10 @@ make_pomp_panel <- function(i,
   h_init <- as.numeric(ind_data %>% filter(obs_time == 0) %>% select(contains("h_obs")))
   times_ind <- ind_data$obs_time
   n.vis <- length(times_ind)
+  age_ind <- unlist(ind_data_list[[i]]$demog_init["age"])
   
   test_params["n_strains"] <- n_strains
-  test_params["init_age"] <- unlist(ind_data_list[[i]]$demog_init["age"])
+  test_params["init_age"] <- age_ind
   test_params[paste0("h_t0_s",c(1:n_strains))] <- h_init
   test_params["p_imprinted_h3"] <- unlist(ind_data_list[[i]]$imprinting_probs["h3n2"])
   test_params["p_imprinted_group_1"] <- unlist(ind_data_list[[i]]$imprinting_probs["h1n1"]) + unlist(ind_data_list[[i]]$imprinting_probs["h2n2"])
@@ -66,7 +67,13 @@ make_pomp_panel <- function(i,
   date_end <- as.Date(vis_dates[length(vis_dates)], orgin = '1970-1-1')
   
   # Start tracking flu intensity some number of years (n_years_prior) before first visit date 
-  sim_start_date = date_0 - n_years_prior*365
+  if(age > n_years_prior)
+    sim_start_date = date_0 - n_years_prior*365
+  }
+  if(age <= n_years_prior){
+    sim_start_date = date_0 - age*365
+  }
+  
   L_data_sub <- L_data %>% filter(full_date >= sim_start_date & full_date <= date_end & Subtype == this_subtype & !is.na(L)) %>% 
     arrange(full_date) %>% 
     mutate(obs_time = (as.numeric(as.Date(full_date, origin = '1970-1-1')) - as.numeric(as.Date(date_0, origin = '1970-1-1'))))
