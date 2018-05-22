@@ -52,13 +52,8 @@ if(make_yearly_dfs){
     select(year,frac_h1n1,frac_h3n2, frac_h2n2)
   pandemic_fractions <- pandemic_data
   
-  genbank_data_China = read.csv("../Imprinting/frequency_data/subtype_fraction_6812_HK_China_byYear.csv") 
-  genbank_data_global = read.csv("../Imprinting/frequency_data/subtype_fraction_6812_Global_byYear.csv")
-  genbank_fractions <- genbank_data_global %>% mutate(a = h3n2 + h1n1) %>% 
-    mutate(frac_h1n1 = h1n1/a, frac_h3n2 = h3n2/a) %>%
-    select(year,frac_h1n1,frac_h3n2) %>% 
-    mutate(frac_h2n2 = 0) %>% 
-    filter(year < 1997)
+  GISAID_fractions = read.csv("./frequency_data/GISAID_fractions.csv") %>% 
+    select(year, frac_h1n1, frac_h3n2,frac_h2n2) 
   
   flunet_data = read.csv("../Imprinting/frequency_data/FluNetInteractiveReport.csv") 
   flunet_yearly <- flunet_data %>% group_by(Year) %>% summarize(h1 = sum(AH1, AH1N12009, na.rm=T), h3 = sum(AH3,na.rm=T)) %>% #, all_A = sum(INF_A,na.rm=T)) %>% 
