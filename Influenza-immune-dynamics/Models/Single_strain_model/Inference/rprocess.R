@@ -233,7 +233,7 @@ rprocess <- Csnippet("// set pointers for arrays
                           lambda = lambda*(p_imprinted_group_1*s_group_1) + (1 - p_imprinted_group_1)*lambda;
                        }
                        if(imprinting_group == 2){
-                          lambda = lambda*(p_imprinted_h3*s_group_2) + (1-p_imprinted_h3)*lambda;
+                          lambda = lambda*(p_imprinted_group_2*s_group_2) + (1-p_imprinted_group_2)*lambda;
                        }
                     }
                     

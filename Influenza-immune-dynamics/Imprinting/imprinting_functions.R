@@ -23,8 +23,8 @@ prob_primary_exposure<- function(id,
                                  strain_vec = c("h1n1","h2n2","h3n2"),
                                  p_uninfected_init = 1,
                                  incidence_data = relative_incidence,
-                                 demog_data = demography_full,
-                                 sero_data = serology_full,
+                                 demog_data = demography,
+                                 sero_data = serology,
                                  resolution = "year",
                                  attack_rate = 0.28/12,
                                  duration_mat_Abs = duration_maternal_Abs,
@@ -46,12 +46,15 @@ prob_primary_exposure<- function(id,
   df_exposure$p_infected = NA
   df_exposure$p_naive = NA
   
-  # Make sure that the exposure only accounts for time after birth and before first visit 
-  df_exposure <- df_exposure %>% filter(!(year <=birthyear & month<=birthmonth))  %>% filter(!(year>test_year)) %>% filter(!(year == first_vis_year & month > test_month))
+  # Make sure that the exposure only starts after birth and that (for kids < 12yo) exposure doesn't overlap visit dates
+  df_exposure <- df_exposure %>% 
+    filter(!(year <=birthyear & month<=birthmonth)) %>% 
+    filter(!(year >= first_vis_year & month >= first_vis_month) & !(year > first_vis_year))
+  
   if(nrow(df_exposure) > n_yrs*MONTHS_PER_YEAR){
     df_exposure <- df_exposure[1:(n_yrs*MONTHS_PER_YEAR),]
   }
-  
+
   df_exposure[1,]$p_infected <- prob_primary_flu_next_dt(p_uninfected = p_uninfected_init)["p_first_infection"]
   df_exposure[1,]$p_naive <-  prob_primary_flu_next_dt(p_uninfected = p_uninfected_init)["p_naive"]
   for(y in c(2:nrow(df_exposure))){

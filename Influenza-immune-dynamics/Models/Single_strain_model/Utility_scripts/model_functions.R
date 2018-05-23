@@ -58,7 +58,7 @@ make_pomp_panel <- function(i,
   test_params["n_strains"] <- n_strains
   test_params["init_age"] <- age_ind
   test_params[paste0("h_t0_s",c(1:n_strains))] <- h_init
-  test_params["p_imprinted_h3"] <- unlist(ind_data_list[[i]]$imprinting_probs["h3n2"])
+  test_params["p_imprinted_group_2"] <- unlist(ind_data_list[[i]]$imprinting_probs["h3n2"])
   test_params["p_imprinted_group_1"] <- unlist(ind_data_list[[i]]$imprinting_probs["h1n1"]) + unlist(ind_data_list[[i]]$imprinting_probs["h2n2"])
   test_params["h_baseline_individual_observed"] <- min(ind_data$h_obs_s1)
   
@@ -67,7 +67,7 @@ make_pomp_panel <- function(i,
   date_end <- as.Date(vis_dates[length(vis_dates)], orgin = '1970-1-1')
   
   # Start tracking flu intensity some number of years (n_years_prior) before first visit date 
-  if(age > n_years_prior)
+  if(age > n_years_prior){
     sim_start_date = date_0 - n_years_prior*365
   }
   if(age <= n_years_prior){
@@ -141,7 +141,7 @@ make_pomp_panel <- function(i,
               spec_params = c(test_params["init_age"],
                               test_params[paste0("h_t0_s",c(1:n_strains))],
                               test_params["p_imprinted_group_1"],
-                              test_params["p_imprinted_h3"],
+                              test_params["p_imprinted_group_2"],
                               test_params["h_baseline_individual_observed"]
               )
   )

@@ -8,8 +8,6 @@ db <- dbConnect(SQLite(), dbFilename)
 dbDisconnect(db)
 
 
-
-
 demography_full <- dbReadTable(db, "demography")
 flu_pop_full <- dbReadTable(db, "flu_population")
 participants_full <- dbReadTable(db, "participantlist")
