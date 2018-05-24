@@ -9,18 +9,23 @@ require(pomp)
 require(panelPomp)
 select <- dplyr::select
 summarize <- dplyr::summarize
+rename <- dplyr::rename
 
 ## Specify the name of the pomp object file ------------------------------------------------------
-pomp_filename <- "" # name the pomp object file (".rda" file)
-test_data_filename <- "" # name of the file containing the data for this subtype (".rda" file)
+test_subtype = "pH1N1" # Choose between "pH1N1" and "H3N2"
+data_table_name <- paste0("data_sub_model_",test_subtype)
+pomp_filename <- "" # Name the pomp object file (".rda" file)
+dbFilename <- "../../../Data/Data.sqlite"
+#Read in data  
+db <- dbConnect(SQLite(), dbFilename)
+serology_sub <- dbReadTable(db, data_table_name) 
+dbDisconnect(db)
 
-load(test_data_filename)
 
-#Filtering out kids <= 15 y old, but can be altered to generate pomp object for adults too
-ids <- demog %>% filter(age_at_recruitment <= 15) %>% select(memberID) %>% unlist() %>% as.numeric()
-serology_sub <- serology_sub %>% filter(memberID %in% ids)
+# Filtering for kids <= 15 y old, but can be altered to generate pomp object for adults too
+serology_sub <- serology_sub %>% filter(age_at_recruitment <= 15)
 
-timestep = 2.5
+timestep = 2.5 # Simulation timestep, days
 
 ## Generate test params 
 shared_params <- c(
@@ -37,7 +42,7 @@ shared_params <- c(
   log_r = log(log(2)/(28*10)),
   log_mean_boost = log(8), # trivial value just to construct the pomp object
   log_sd_boost = log(.1), # trivial value just to construct the pomp object
-  log_sig = log(1.2),
+  log_sig = log(1.29),
   log_sig_2 = log(0.74)
 )
 
@@ -46,7 +51,7 @@ test_ids = unique(serology_sub$memberID)
 pomp_object_list <- lapply(c(1:length(test_ids)),
                            test_ids = test_ids,
                            make_pomp_panel,  
-                           data = serology_sub_H1,
+                           data = serology_sub,
                            test_params = shared_params, 
                            timestep = timestep, 
                            log_transform_titer = F

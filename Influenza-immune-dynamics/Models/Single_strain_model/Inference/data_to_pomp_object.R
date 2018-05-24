@@ -26,7 +26,13 @@ imprinting_data_filename = NA # Calculate imprinting probabilities and store fil
 pomp_filename <- paste0("panel_object_", test_subtype)
 community_intensity_table_name <- paste0("community_intensity_", test_subtype)
 host_data_filename = paste0("pomp_data_",test_subtype, ".rda")
+
 ## ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Get community intensity data 
+db <- dbConnect(SQLite(), dbFilename)
+intensity_data <- dbReadTable(db, community_intensity_table_name) %>% 
+  mutate(full_date = as.Date(full_date, origin = "1970-1-1"))
+dbDisconnect(db)
 
 ## Load in the file containing the host data list
 load(host_data_filename)
@@ -69,8 +75,8 @@ shared_params <- c(
   log_beta_scaled = log(5),
   n_age_categories = nrow(contacts),
   age_thres = 19,
-  alpha_1 = log(40), # wrong value
-  alpha_2 = log(40),
+  alpha_1 = log(40), # filler value
+  alpha_2 = log(40), # filler value
   phi_1 = 2.102,
   phi_2 = 2.192,
   log_mean_gam = log(5),
@@ -92,8 +98,8 @@ shared_params <- c(
   log_imprinting_effect_group_1 = log(1),
   log_imprinting_effect_group_2 = log(1),
   log_D = log(1e10),
-  log_sig = log(.5),
-  log_sig_2 = log(1)
+  log_sig = log(1.29),
+  log_sig_2 = log(0.74)
 )
 shared_params[ paste0("age_contact_group_",c(1:nrow(contacts)))] = contacts$age_participant
 shared_params[paste0("beta_community_",c(1:nrow(contacts)))] = contacts$total
@@ -115,6 +121,7 @@ pomp_object_list <-lapply(c(1:length(host_data_list)),
                            test_params = shared_params, 
                            timestep = timestep, 
                            log_transform_titer = F,
+                           L_data = intensity_data,
                            n_years_prior = n_years_initial,
                            L_tol = .00001,
                            this_subtype = subtype)

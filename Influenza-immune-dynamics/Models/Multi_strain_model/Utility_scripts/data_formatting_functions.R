@@ -3,25 +3,9 @@ log_titer_trans <- function(x){
   return(log2(x/10) + 2)
 }
 
-get_age_at_recruitment <- function(memberID, demography_table = demog){
-  return(unique(demography_table[demography_table$memberID == memberID,]$age_at_recruitment))
-}
-
-get_birth_date <- function(memberID, demography_table = demog){
-  return(unique(demography_table[demography_table$memberID == memberID,]$birthdate))
-}
-
-get_initial_age_for_ind <- function(id, dem_data = demog, DAYSPERYEAR = 365){
-  data <- dem_data %>% filter(memberID == id)
-  dem_df <- data.frame(member = data$memberID,
-                        age = as.numeric(as.Date(data$visitdate) - as.Date(data$birthdate))/DAYSPERYEAR,
-                        gender = data$gender)
-  return(dem_df)
-}
-
 get_serology_data_for_ind_and_strain <- function(strain_id, id , strain_vec = strains, serology_data = serology){
   strain_name <- strain_vec[strain_id]
-  data <- serology %>% filter(memberID == id & name == strain_name) %>% as.data.frame %>% select(-c(hhid,member,visit_id,name)) %>% 
+  data <- serology %>% filter(memberID == id & subtype == strain_name) %>% as.data.frame %>% select(-c(hhid,member,visit_id,subtype)) %>% 
     filter(!is.na(date))
   n_strains <- length(strain_vec)
   data <- data %>% select(-memberID) %>% arrange(date)
@@ -30,6 +14,14 @@ get_serology_data_for_ind_and_strain <- function(strain_id, id , strain_vec = st
   data <- data %>% arrange(obs_time)
   data <- melt(data, id.vars = c("obs_time","date"))
   return(data)
+}
+
+get_initial_age_for_ind <- function(id, dem_data = demog, DAYSPERYEAR = 365){
+  data <- dem_data %>% filter(memberID == id)
+  dem_df <- data.frame(member = data$memberID,
+                       age = as.numeric(as.Date(data$visitdate) - as.Date(data$birthdate))/DAYSPERYEAR
+  )
+  return(dem_df)
 }
 
 ## Make pomp data
@@ -42,13 +34,17 @@ make_pomp_data_for_ind <- function(id,
                                    n_vis_sim = NA){
   cat("id is ", id, "\n")
   n_strains <- length(strain_vec)
-  hh_data_titer <- do.call("rbind",lapply(c(1:n_strains), get_serology_data_for_ind_and_strain, id = id))
+  hh_data_titer_list <- lapply(c(1:n_strains), get_serology_data_for_ind_and_strain, id = id)
+  hh_data_titer_list[[1]] <- hh_data_titer_list[[1]] %>% filter(date %in% hh_data_titer_list[[2]]$date)
+  hh_data_titer_list[[2]] <- hh_data_titer_list[[2]] %>% filter(date %in% hh_data_titer_list[[1]]$date)
+  hh_data_titer <- do.call("rbind",hh_data_titer_list)
+  
   hh <- hh_data_titer %>% 
     mutate(date_diff = c(as.numeric(diff(date)),NA)) %>% 
     filter(date_diff > 20 | is.na(date_diff)) %>% 
+    group_by(variable) %>% 
     mutate(obs_time = obs_time - min(obs_time))
-  data_all <- hh %>% select(-date_diff)
-  min_titer <- min(data_all$value)
+  data_all <- hh %>% select(-date_diff) %>% as.data.frame()
   dates <- unique(data_all$date)
   data <- reshape(data_all %>% select(-date), timevar = "variable", idvar = "obs_time", direction = "wide" )
   names(data) <- c("obs_time", as.character(unique(data_all$variable)))
@@ -86,11 +82,11 @@ shift <- function(x, lag) {
   return(xnew)
 }
 
-calculate_titer_change <- function(id, sero_data = as.data.frame(serology), strain = "sH3"){
+calculate_titer_change <- function(id, sero_data = as.data.frame(serology), strain = "H3N2"){
   cat("id is ", id, "\n")
-  data <- sero_data %>% filter(name == strain & memberID == id) %>% 
+  data <- sero_data %>% filter(subtype == strain & memberID == id) %>% 
     select(-c(hhid,member, visit_id))%>%
-    group_by(date,name,memberID) %>% 
+    group_by(date,subtype,memberID) %>% 
     summarize(titer = log_titer_trans(max(value))) %>% 
     as.data.frame %>% 
     mutate( date = as.Date(date, origin = '1970-1-1')) %>% 

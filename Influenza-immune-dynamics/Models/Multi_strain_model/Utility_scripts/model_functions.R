@@ -1,7 +1,5 @@
-require(MASS)
-require(pomp)
 
-## -- Utility functions ------------------------------------------------------------
+## -- utility functions ------------------------------------------------------------
 anti_logit <- function(x){
   return(exp(x)/(1+exp(x)))
 }
@@ -11,7 +9,13 @@ logit <- function(x){
 }
 
 log_titer_trans <- function(x){
+  if(x > 0){
     return(log2(x/10) + 2)
+  }
+  if(x <= 0 ){
+    return(x)
+  }
+  #return(log2(x))
 }
 
 standardize <- function(vec){
@@ -26,21 +30,27 @@ rep.row<-function(x,n){
   matrix(rep(x,each=n),nrow=n)
 }
 
-AICc = function(k,n,LL){
-  return(2*k - 2*LL + (2*k^2 + 2*k)/(n - k - 1))
+get_tbv <- function(vec){
+  tbv <- array(0,length(vec))
+  for(i in 2:length(vec)){
+    tbv[i] <- vec[i] - vec[i-1]
+  }
+  return(tbv)
 }
 
 ## data generation functions ----------------------------------------------------------------------------------
-make_pomp_panel <- function(i, 
-                            ind_data_list, 
-                            test_params = shared_params, 
-                            imprinting_subtype,
-                            L_data,
-                            timestep = 3, 
-                            log_transform_titer = TRUE,
-                            L_tol = .00005,
-                            n_years_prior = 7,
-                            this_subtype = "H3N2"){
+
+make_pomp_panel_2strain <- function(i, 
+                                    ind_data_list, 
+                                    test_params = shared_params, 
+                                    imprinting_subtype,
+                                    timestep = 3, 
+                                    log_transform_titer = TRUE,
+                                    L_data = intensity_data,
+                                    L_tol = .00005,
+                                    n_years_prior = 7,
+                                    subtypes = c("pH1N1","H3N2")
+){
   
   cat("i is ",i, "\n")
   ind_data <- ind_data_list[[i]]$y %>% arrange(obs_time)
@@ -51,67 +61,63 @@ make_pomp_panel <- function(i,
     ind_data <- ind_data %>% mutate_at(.vars = vars(contains("h_obs")),.funs = funs(log_titer_trans))
   }
   
+  # extract initial titer
   h_init <- as.numeric(ind_data %>% filter(obs_time == 0) %>% select(contains("h_obs")))
+  h_min <- as.numeric( ind_data %>% select(contains("h_obs")) %>% apply(.,2,min))
   times_ind <- ind_data$obs_time
   n.vis <- length(times_ind)
-  age_ind <- unlist(ind_data_list[[i]]$demog_init["age"])
   
   test_params["n_strains"] <- n_strains
-  test_params["init_age"] <- age_ind
+  test_params["init_age"] <- unlist(ind_data_list[[i]]$demog_init["age"])
   test_params[paste0("h_t0_s",c(1:n_strains))] <- h_init
   test_params["p_imprinted_group_2"] <- unlist(ind_data_list[[i]]$imprinting_probs["h3n2"])
   test_params["p_imprinted_group_1"] <- unlist(ind_data_list[[i]]$imprinting_probs["h1n1"]) + unlist(ind_data_list[[i]]$imprinting_probs["h2n2"])
-  test_params["h_baseline_individual_observed"] <- min(ind_data$h_obs_s1)
-  
+  test_params[paste0("h_baseline_observed_s",c(1:n_strains))] <- h_min
   ## Covariates: Flu intensity 
   date_0 <- as.Date(vis_dates[1], orgin = '1970-1-1')
   date_end <- as.Date(vis_dates[length(vis_dates)], orgin = '1970-1-1')
+  sim_start_date = date_0  - n_years_prior*365
   
-  # Start tracking flu intensity some number of years (n_years_prior) before first visit date 
-  if(age > n_years_prior){
-    sim_start_date = date_0 - n_years_prior*365
+  L_covar <- list()
+  for( i in c(1:length(subtypes))){
+    this_subtype = subtypes[i]
+    L_data_sub <- L_data %>% filter(full_date >= sim_start_date & full_date <= date_end & Subtype == this_subtype & !is.na(L)) %>% 
+      arrange(full_date) %>% 
+      mutate(obs_time = (as.numeric(as.Date(full_date, origin = '1970-1-1')) - as.numeric(as.Date(date_0, origin = '1970-1-1'))))
+    prediction_range <- seq(from = min(L_data_sub$obs_time), to = max(ind_data$obs_time), by = timestep)
+    
+    L_pre_sub <- L_data_sub %>% 
+      filter(obs_time <= 0) %>% 
+      mutate(p_L = L/sum(L))
+    L_pre_sub$obs_time[nrow(L_pre_sub)] <- 0
+    covartable <- data.frame(
+      obs_time = prediction_range,
+      L = predict(smooth.spline(x=L_data_sub$obs_time, y=L_data_sub$L),
+                  x=prediction_range)$y
+    ) %>% mutate(L = sapply(L,max, L_tol))
+    
+    L_pre_sub_covar <- rep.row(data.frame(t(data.frame(c(L_pre_sub$obs_time, L_pre_sub$p_L)))), nrow(covartable))
+    covartable <- cbind(covartable, L_pre_sub_covar) 
+    names(covartable) <- c("obs_time",paste0("L_s",i),paste0("epi_times_",c(1:nrow(L_pre_sub)),"_s",i), paste0("p_epi_",c(1:nrow(L_pre_sub)),"_s",i))
+    L_covar[[i]] <- covartable
   }
-  if(age <= n_years_prior){
-    sim_start_date = date_0 - age*365
-  }
   
-  L_data_sub <- L_data %>% filter(full_date >= sim_start_date & full_date <= date_end & Subtype == this_subtype & !is.na(L)) %>% 
-    arrange(full_date) %>% 
-    mutate(obs_time = (as.numeric(as.Date(full_date, origin = '1970-1-1')) - as.numeric(as.Date(date_0, origin = '1970-1-1'))))
-  prediction_range <- seq(from = min(L_data_sub$obs_time), to = max(ind_data$obs_time), by = timestep)
-  
-  L_pre_sub <- L_data_sub %>% 
-    filter(obs_time <= 0) %>% 
-    mutate(p_L = L/sum(L))
-  L_pre_sub$obs_time[nrow(L_pre_sub)] <- 0
-
-  covartable <- data.frame(
-    obs_time = prediction_range,
-    L = predict(smooth.spline(x=L_data_sub$obs_time, y=L_data_sub$L),
-                x=prediction_range)$y
-  ) %>% mutate(L = sapply(L,max, L_tol))
-  
-  L_pre_sub_covar <- rep.row(data.frame(t(data.frame(c(L_pre_sub$obs_time, L_pre_sub$p_L)))), nrow(covartable))
-  
-  # Define the covariate table that goes into the pomp object 
-  covartable <- cbind(covartable, L_pre_sub_covar) 
-  names(covartable) <- c("obs_time","L",paste0("epi_times_",c(1:nrow(L_pre_sub))), paste0("p_epi_",c(1:nrow(L_pre_sub))))
-  
-  # Define the latent states in the model 
+  covartable <- merge(L_covar[[1]],L_covar[[2]])
+  cov_sub <- covartable %>% select(contains("L_"))
+  covartable <- cbind(covartable %>% select(-(contains("L_"))),cov_sub)
   statenames = c(sprintf("t_last_infection_s%d",c(1:n_strains)),
                  sprintf("t_clear_s%d",c(1:n_strains)),
                  sprintf("h_s%d",c(1:n_strains)),
                  sprintf("h_last_infection_s%d",c(1:n_strains)),
                  sprintf("I_s%d",c(1:n_strains)),
-                 "h_baseline_individual",
-                 "d_acute",
-                 "q1",
-                 "q2",
-                 "q",
+                 sprintf("q1_s%d",c(1:n_strains)), 
+                 sprintf("q2_s%d",c(1:n_strains)),
+                 sprintf("q_s%d",c(1:n_strains)),
+                 sprintf("q_hetero_s%d",c(1:n_strains)),
+                 sprintf("d_acute_s%d",c(1:n_strains)),
+                 sprintf(paste0("h_baseline_individual_s",c(1:n_strains))),
                  "age"
   )
-  
-  # Name of observation variables for the pomp model 
   obsnames = c(sprintf("h_obs_s%d",c(1:n_strains)))
   
   if("obs" %in% names(ind_data)){
@@ -119,9 +125,7 @@ make_pomp_panel <- function(i,
   }
   pomp_data <- ind_data
   log_paramnames <- names(test_params)
-  
-  # Load the process model file (built in "C-snippets")
-  source("rprocess.R")
+  source("rprocess_multi_strain.R")
   pomp_object <- pomp(
     data = pomp_data,
     times ="obs_time",
@@ -137,13 +141,13 @@ make_pomp_panel <- function(i,
     paramnames = log_paramnames,
     initializer = init
   ) 
-  
+
   return(list(pomp_object = pomp_object, 
               spec_params = c(test_params["init_age"],
                               test_params[paste0("h_t0_s",c(1:n_strains))],
                               test_params["p_imprinted_group_1"],
                               test_params["p_imprinted_group_2"],
-                              test_params["h_baseline_individual_observed"]
+                              test_params[paste0("h_baseline_observed_s",c(1:n_strains))]
               )
   )
   )

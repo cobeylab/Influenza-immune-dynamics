@@ -34,7 +34,6 @@ rep.row<-function(x,n){
 make_pomp_panel <- function(i, 
                             test_ids,
                             data, 
-                            demog_data = demog,
                             test_params = shared_params, 
                             timestep = 2.5, 
                             log_transform_titer = TRUE
@@ -42,7 +41,7 @@ make_pomp_panel <- function(i,
   
   cat("i is ",i, "\n")
   ind_data <- data %>% filter(memberID == test_ids[i]) %>% 
-    select(date, value, swab_date) %>% 
+    select(date, value, swab_date, age_at_recruitment) %>% 
     rename(h_obs = value) %>% 
     mutate(obs_time = as.numeric(date - min(date)),
            swab_time = as.numeric(swab_date - min(date)))
@@ -58,11 +57,8 @@ make_pomp_panel <- function(i,
   times_ind <- ind_data$obs_time
   n.vis <- length(times_ind)
   
-   dob <- demog %>% filter(memberID == test_ids[i]) %>% 
-    select(birthdate) %>% 
-    unlist %>% 
-    as.Date(origin = "1970-1-1")
-  test_params["init_age"] = as.numeric(min(vis_dates) - dob)/365
+
+  test_params["init_age"] = ind_data$age_at_recruitment
   test_params["h_t0"] = h_init
   test_params["t_infection"] = unique(ind_data$swab_time)
  
