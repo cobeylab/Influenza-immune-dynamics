@@ -34,7 +34,8 @@ an associated chain Id. This process will generate several output files in the `
 Once the profile likelihood search has been completed, select the point of maximum likelihood for each value of the profile parameter to represent the inferred parameter. Then, use the Monte Carlo Adjusted Profile (MCAP) method<sup>2</sup> to calculate a smoothed estimate of the profile and the corresponding 95% confidence interval. A function containing the MCAP algorithm is given in the `model_functions.R` script within the `Utility_scripts` folder of each model subdirectory. The `calculate_MLE_and_CI_for_param.R` script in the `analysis` folder calculates the smoothed profile, MLE, and 95% CI for each parameter inferred.
 
 ## Figures from model results 
-Scripts to generate figures from the model results can be found in the `analysis` folder of the `results` subdirectory of the [Additional risk model](./Inference/additional_risk_model) directory. The `generate_figures.R` script will generate the suite of figures and save the pdf results to the `figures` folder.
+
+## Simulations 
 
 ## References
 1. King AA, Nguyen D and Ionides EL (2015) Statistical inference for partially observed Markov processes via the R package pomp. arXiv preprint arXiv:1509.00503.
