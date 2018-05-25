@@ -4,24 +4,29 @@ require(MASS)
 require(RSQLite)
 require(reshape2)
 require(dplyr)
-source("../../../Utility_scripts/model_functions.R")
+source("../Utility_scripts/model_simulation_functions_boosting.R")
 textSize = 12
-source("../../../Utility_scripts/plot_themes.R")
+source("../Utility_scripts/plot_themes.R")
 require(pomp)
 require(panelPomp)
 select <- dplyr::select
 summarize <- dplyr::summarize
-test_data_filename <- "H1_data_serology_swab.rda"
-load(test_data_filename)
-serology_sub <- serology_sub_H1
-serology_sub$age = NA
-for( i in c(1:nrow(serology_sub))){
-  serology_sub[i,]$age = demog[demog$memberID == serology_sub[i,]$memberID,]$age_at_recruitment
-}
+
+age_thres = 15 # Age threshold to distinguish between children and adults 
+test_subtype = "H3N2" # Choose between "pH1N1" and "H3N2"
+data_table_name <- paste0("data_sub_model_",test_subtype)
+pomp_filename <- "" # Name the pomp object file (".rda" file)
+dbFilename <- "../../../Data/Data.sqlite"
+#Read in data  
+db <- dbConnect(SQLite(), dbFilename)
+serology_sub <- dbReadTable(db, data_table_name) %>% 
+  rename(age = age_at_recruitment)
+dbDisconnect(db)
+
 
 # Calculate the time between first titer and swab, and between swab and second titer
 sub <- serology_sub%>% 
-  mutate(Child  = as.factor(age < 15)) %>% 
+  mutate(Child  = as.factor(age <= age_thres)) %>% 
   group_by(memberID,swab_date,Child,age,min_date,max_date) %>% 
   summarize(delta = log_titer_trans(max(value)) - log_titer_trans(min(value)),
             pre = log_titer_trans(min(value)),
