@@ -28,8 +28,8 @@ n_particles_pfilter = 20e3
 evaluate_Lhood = TRUE
 n_profile_points = # specify number of profile points
 n_profile_reps = # specify number of replicates for each profile point
-alpha_min = -5 # min value of profile range
-alpha_max = 2 # max value of profile range
+alpha_min =  # min value of profile range
+alpha_max = # max value of profile range
 alpha_vals = rep(seq(alpha_min,alpha_max, length.out = n_profile_points),n_profile_reps)
 
 # Specify input and output filenames
@@ -40,7 +40,6 @@ pomp_filename <- "panel_object_boosting_H1_kids.rda" #".rda" file containing the
 ## Generate test params 
 shared_params <- c(
   log_transform_titers = 1,
-  measurement_error = 2,
   log_transform_obs = 1,
   variable_boosting = 1,
   include_k = 1,

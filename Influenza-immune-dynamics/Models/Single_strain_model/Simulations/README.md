@@ -1,0 +1,2 @@
+
+The simulation code is broken up into simulations of the latent model dynamics (to calculate incidence, loss of immune protection, etc.) and simulations of the model for model validation (comparing the simulated titers to the observed titers for individuals). 

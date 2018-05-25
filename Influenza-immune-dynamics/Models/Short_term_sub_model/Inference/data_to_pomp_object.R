@@ -30,7 +30,6 @@ timestep = 2.5 # Simulation timestep, days
 ## Generate test params 
 shared_params <- c(
   log_transform_titers = 1,
-  measurement_error = 2,
   log_transform_obs = 1,
   variable_boosting = 1,
   include_k = 1,

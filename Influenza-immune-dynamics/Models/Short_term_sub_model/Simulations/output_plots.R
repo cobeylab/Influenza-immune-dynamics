@@ -78,5 +78,5 @@ for(i in c(1:length(sim_filenames))){
 
 p_combined <- plot_grid(p_list[[1]], p_list[[2]], p_list[[3]], p_list[[4]], ncol = 2, align = "hv")
 if(save_plots){
-  save_plot("boosting_fig.pdf", p_combined, base_width = 183, base_height = 120, units = "mm")
+  save_plot("./Output_plots/boosting_fig.pdf", p_combined, base_width = 183, base_height = 120, units = "mm")
 }
