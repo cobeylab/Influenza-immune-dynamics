@@ -26,12 +26,12 @@ chain_filename <- paste0("chain_",chainId,".rda") # Name of the file (".rda") th
 pomp_filename <- "panel_object_H1_all.rda" # Name of the file (".rda") that stores the POMP object
 
 # Specify MIF parameters for this chain ------------------------------------------------------------------------------------------------------------
-n_mif = 10
+n_mif = 100
 n_mif_updated <- n_mif
 n_particles = 10e3
 cooling_rate = .9
-n_reps_pfilter = 3
-n_particles_pfilter = 10e3
+n_reps_pfilter = 10
+n_particles_pfilter = 20e3
 evaluate_Lhood = TRUE
 
 contacts<- data.frame(age_participant = c(0,10,20,40,65),
@@ -70,7 +70,7 @@ shared_params <- c(
   log_sd_boost_1 = NA, # Log sd of short-term titer boost, children
   log_mean_boost_2 = NA, # Log mean of short-term titer boost, adults
   log_sd_boost_2 = NA, # Log sd of short-term titer boost, adults
-  logit_d_general = NA,
+  logit_d_general = NA, # This parameter allows for partial immunity, but was set to zero for the analysis in the paper 
   log_w_general_1 = NA,
   log_w_general_2 = NA,
   log_sig = log(1.2),

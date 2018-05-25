@@ -4,6 +4,7 @@ require(RSQLite)
 require(reshape2)
 require(dplyr)
 source("../Utility_scripts/model_functions.R")
+source("../Utility_scripts/data_formatting_functions.R")
 source("../../../Imprinting/imprinting_functions.R")
 require(panelPomp)
 select <- dplyr::select
@@ -13,9 +14,10 @@ contains <- dplyr::contains
 
 ## Set up input and output files  ## ----------------------------------------------------------------------------------------------------------------------------------
 dbFilename <- "../../../Data/Data.sqlite"
-test_subtype = "pH1N1"
+test_subtype = "pH1N1" # Choose between pH1N1 and H3N2
 host_data_filename = paste0("pomp_data_",test_subtype, ".rda")
 calculate_imprinting = T
+imprinting_data_filename = "imprinting_data.rda"
 
 #Read in data  
 db <- dbConnect(SQLite(), dbFilename)
@@ -64,10 +66,10 @@ if(!calculate_imprinting){
 }
 
 ## Make list of host data -----------------------------------------------------------------------------------------------------
-strains = subtype
-host_data_list <- lapply(test_ids, 
+strains = test_subtype
+host_data_list <- lapply(unique(serology$memberID), 
                          FUN = make_pomp_data_for_ind, 
-                         demographic_data = demog,
+                         demographic_data = demography,
                          strain_vec = strains,
                          imprinting_data = df_imprinting,
                          simulate_times = F, # Do not simulate additional visits for individuals

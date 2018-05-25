@@ -7,10 +7,6 @@ get_age_at_recruitment <- function(memberID, demography_table = demog){
   return(unique(demography_table[demography_table$memberID == memberID,]$age_at_recruitment))
 }
 
-get_birth_date <- function(memberID, demography_table = demog){
-  return(unique(demography_table[demography_table$memberID == memberID,]$birthdate))
-}
-
 get_initial_age_for_ind <- function(id, dem_data = demog, DAYSPERYEAR = 365){
   data <- dem_data %>% filter(memberID == id)
   dem_df <- data.frame(member = data$memberID,
@@ -21,7 +17,7 @@ get_initial_age_for_ind <- function(id, dem_data = demog, DAYSPERYEAR = 365){
 
 get_serology_data_for_ind_and_strain <- function(strain_id, id , strain_vec = strains, serology_data = serology){
   strain_name <- strain_vec[strain_id]
-  data <- serology %>% filter(memberID == id & name == strain_name) %>% as.data.frame %>% select(-c(hhid,member,visit_id,name)) %>% 
+  data <- serology %>% filter(memberID == id & subtype == strain_name) %>% as.data.frame %>% select(-c(hhid,member,visit_id,subtype)) %>% 
     filter(!is.na(date))
   n_strains <- length(strain_vec)
   data <- data %>% select(-memberID) %>% arrange(date)
@@ -84,22 +80,4 @@ shift <- function(x, lag) {
     xnew <- x
   }
   return(xnew)
-}
-
-calculate_titer_change <- function(id, sero_data = as.data.frame(serology), strain = "sH3"){
-  cat("id is ", id, "\n")
-  data <- sero_data %>% filter(name == strain & memberID == id) %>% 
-    select(-c(hhid,member, visit_id))%>%
-    group_by(date,name,memberID) %>% 
-    summarize(titer = log_titer_trans(max(value))) %>% 
-    as.data.frame %>% 
-    mutate( date = as.Date(date, origin = '1970-1-1')) %>% 
-    arrange(date) 
-  if(nrow(data) > 1){
-    data$diff <- c(NA,diff(data$titer))
-    data$titer_init <- shift(data$titer,1)
-    data$delta_t <- c(NA, diff(data$date))
-    data$date_midpoint <- data$date - data$delta_t/2
-    return(data)
-  }
 }
