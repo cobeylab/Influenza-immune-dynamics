@@ -21,12 +21,12 @@ The [Models](./Models) directory contains the code to run the inference for the 
 1. **Global exploration of the likelihood surface** Maximize the likelihood via a global exploration of the likelihood space from random starting parameter sets.  The`example_global_likelihood.R` script in the `Inference` folder of the short-term and single-strain model directoires contains example code to set up and run one MIF search from a set of random model parameters. Here you can specify the subtype, host age group, and the parameters of the MIF search. You can run any number of MIF searches in parallel. Each MIF search, or "chain" has an associated chain Id. This process will generate several output files:
 
 * A `.rda` file that stores the entire MIF chain.
-* A `.csv` file containing the output from the search 
+* A `.csv` file containing the output from the search.s 
 
 
 2. **Likelihood profiles** Each model subdirectory contains the code to construct likelihood profiles to calculate maximum likelihood parameter estiamtes and 95% confidence intervals. To profile over a parameter of interest first update the `example_profile.R` script to sweep over the desired range and parameter. Next, construct the profile by generating MIF searches from a series of starting parameter sets that sweep over the desired (fixed) range of the focal parameter. As with the global likelihood search, this script generates one MIF chain for one profile point, and multiple profile points can be run in parallel by specifying a series of "chainId" variables. The output consists of:
 * A `.rda` file that stores the entire MIF chain for the profile point.
-* A `.csv` file containing the output from the search (just in case there are overwrite issues with the SQLITE database due to many chains being run in parallel.)
+* A `.csv` file containing the output from the search.
 
 ## Calculating Confidence Intervals from Likelihood Profiles
 Once the profile likelihood search has been completed, select the point of maximum likelihood for each value of the profile parameter to represent the inferred parameter. Then, use the Monte Carlo Adjusted Profile (MCAP) method<sup>2</sup> to calculate a smoothed estimate of the profile and the corresponding 95% confidence interval. A function containing the MCAP algorithm is given in the `model_functions.R` script within the `Utility_scripts` folder of each model subdirectory. 
