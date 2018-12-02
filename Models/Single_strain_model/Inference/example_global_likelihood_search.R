@@ -1,5 +1,5 @@
 ########################################################################
-## Sylvia Ranjeva, May 2018
+## Sylvia Ranjeva, August 2018
 ## Global search in likelihood space 
 ########################################################################
 require(ggplot2)
@@ -8,7 +8,7 @@ require(MASS)
 require(RSQLite)
 require(reshape2)
 require(dplyr)
-source("../Utility_scripts/model_functions.R")
+source("../Utility_scripts/model_functions_hh.R")
 require(pomp)
 require(panelPomp)
 select <- dplyr::select
@@ -26,54 +26,57 @@ chain_filename <- paste0("chain_",chainId,".rda") # Name of the file (".rda") th
 pomp_filename <- "panel_object_H1_all.rda" # Name of the file (".rda") that stores the POMP object
 
 # Specify MIF parameters for this chain ------------------------------------------------------------------------------------------------------------
-n_mif = 100
+n_mif = 1
 n_mif_updated <- n_mif
-n_particles = 10e3
+n_particles = 2
 cooling_rate = .9
-n_reps_pfilter = 10
-n_particles_pfilter = 20e3
+n_reps_pfilter = 2
+n_particles_pfilter = 2
 evaluate_Lhood = TRUE
 
-contacts<- data.frame(age_participant = c(0,10,20,40,65),
-                      total = c(1,.953,.746,.751,.562)*7.65)
+# Read in and format contact matrix 
+source("contact_matrix.R")
 
 ## Generate test params 
 shared_params <- c(
   log_transform_titers = 1,
-  measurement_error = 2,
   include_imprinting = 0,
   imprinting_group = 2,
+  measurement_error = 2,
   log_transform_obs = 1,
   include_general_immunity = 1,
-  include_k = 1,
   variable_boosting = 1,
+  include_k = 1,
   n_strains = 1,
   log_beta_scaled = NA,
   n_age_categories = nrow(contacts),
   age_thres = 15,
-  alpha_1 = NA, 
-  alpha_2 = NA,
-  phi_1 = 2.1,
-  phi_2 = 2.1,
+  alpha_kids = NA,
+  alpha_adults = NA,
+  phi_kids = 2.1,
+  phi_adults = 2.1,
   log_mean_gam = log(5),
   log_var_gam = log(1),
-  log_T_peak = log(28),
+  log_T_peak = log(28), # duration of time between initial inection and peak ab titer,6.8 weeks Zhao et al 2016
+  log_k_kids = NA,
+  log_k_adults = NA,
   log_w = log(log(2)/204),
   log_r = log(log(2)/(28/10)),
-  log_k_1 = NA,  # Antibody ceiling effect for children
-  log_k_2 = NA,  # Antibody ceiling effect for adults
-  log_imprinting_effect_group_1 = NA, # Fit this parameter if testing imprinting models
-  log_imprinting_effect_group_2 = NA, # Fit this parameter if testing imprinting models 
-  logit_d2_1 = NA, 
-  logit_d2_2 = NA,
-  log_mean_boost_1 = NA, # Log mean of short-term titer boost, children
-  log_sd_boost_1 = NA, # Log sd of short-term titer boost, children
-  log_mean_boost_2 = NA, # Log mean of short-term titer boost, adults
-  log_sd_boost_2 = NA, # Log sd of short-term titer boost, adults
-  logit_d_general = NA, # This parameter allows for partial immunity, but was set to zero for the analysis in the paper 
-  log_w_general_1 = NA,
-  log_w_general_2 = NA,
-  log_sig = log(1.2),
+  log_mean_boost_kids = NA,
+  log_mean_boost_adults = NA,
+  log_sd_boost_kids = NA,
+  log_sd_boost_adults = NA,
+  logit_d2_kids = NA,
+  logit_d2_adults = NA,
+  logit_weight_adults = NA,
+  logit_weight_kids = NA,
+  logit_d_general = NA,
+  log_w_general_kids = NA,
+  log_w_general_adults = NA,
+  log_imprinting_effect_group_1 = NA,
+  log_imprinting_effect_group_2 = NA,
+  log_omega_hh = NA,
+  log_sig = log(1.1),
   log_sig_2 = log(0.74)
 )
 shared_params[ paste0("age_contact_group_",c(1:nrow(contacts)))] = contacts$age_participant
@@ -81,28 +84,40 @@ shared_params[paste0("beta_community_",c(1:nrow(contacts)))] = contacts$total
 
 rw_sd_vec <- rw.sd(
   log_beta_scaled = 0.01,
-  alpha_1 = 0.01,
-  alpha_2 = 0.01,
+  alpha_kids = 0.01,
+  alpha_adults = 0.01,
   log_imprinting_effect_group_1 = 0,
   log_imprinting_effect_group_2 = 0,
-  logit_d2_1 = 0.01,
-  logit_d2_2 = 0.01,
+  logit_d2_adults = 0,
+  logit_d2_kids = 0.01,
   logit_d_general = 0,
-  log_w_general_1 = 0.01,
-  log_w_general_2 = 0.01
+  log_w_general_kids = 0,
+  log_w_general_adults = 0.01,
+  logit_weight_adults = 0.01,
+  logit_weight_kids = 0,
+  log_omega_hh = 0.01
 )
 
 inferred_params <- c(
   log_beta_scaled = log(runif(1,0,1)),
-  alpha_1 = runif(1,0,5),
-  alpha_2 = runif(1,0,5),
+  alpha_kids = runif(1,0,5),
+  alpha_adults = runif(1,0,5),
+  log_k_kids = -.36,
+  log_k_adults = -1.1,
   log_imprinting_effect_group_1  = 0,
-  log_imprinting_effect_group_2 = 0,
-  logit_d2_1 = logit(runif(1,0.1,0.9)),
-  logit_d2_2 = logit(runif(1,0.1,0.9)),
-  logit_d_general = -100,
-  log_w_general_1 = log(runif(1,0,1/180)),
-  log_w_general_2 = log(runif(1,0,1/180))
+  log_imprinting_effect_group_2 = 0,#log(runif(1,0.1,5)),
+  log_mean_boost_kids = 4.45,
+  log_sd_boost_kids = -0.02,
+  log_mean_boost_adults = 2.63,
+  log_sd_boost_adults = 0.6,
+  logit_d2_kids = logit(runif(1,0.1,0.9)),
+  logit_d2_adults = -2.5,
+  logit_weight_kids = 15,
+  logit_weight_adults = logit(runif(1,0.1,0.9)),
+  logit_d_general = -50,#logit(runif(1,.1,.9)),
+  log_w_general_kids = 100,
+  log_w_general_adults = log(runif(1,0,1/180)),
+  log_omega_hh = log(runif(1,0,1))
 )
 
 source("global_search_methods.R")

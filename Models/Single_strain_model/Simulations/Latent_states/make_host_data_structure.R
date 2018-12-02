@@ -3,21 +3,25 @@ require(MASS)
 require(RSQLite)
 require(reshape2)
 require(dplyr)
-source("../Utility_scripts/model_functions.R")
-source("../../../Imprinting/imprinting_functions.R")
+require(lubridate)
+source("../../Utility_scripts/model_functions_hh.R")
+source("../../Utility_scripts/data_formatting_functions.R")
+source("../../../../Imprinting/imprinting_functions.R")
 require(panelPomp)
 select <- dplyr::select
 rename <- dplyr::rename
 summarize <- dplyr::summarise
 contains <- dplyr::contains 
 
+
 ## Set up input and output files  ## ----------------------------------------------------------------------------------------------------------------------------------
-dbFilename <- "../../../Data/Data.sqlite"
+dbFilename <- "../../../../Data/Data.sqlite"
 test_subtype = "pH1N1"
 host_data_filename = paste0("pomp_data_",test_subtype, "_simulated.rda")
 calculate_imprinting = T # Set to F if you have generated and stored a data frame of imprinting probabilities
-imprinting_data_filename = "../Inference/imprinting_df.rda"
+imprinting_data_filename = "../../../../Imprinting/imprinting_data.rda"
 n_simulated_visits = 200 # Generate 200 observations per individual to get a better approximation of the latent dynamics
+
 
 #Read in data  
 db <- dbConnect(SQLite(), dbFilename)
@@ -66,13 +70,13 @@ if(!calculate_imprinting){
 }
 
 ## Make list of host data -----------------------------------------------------------------------------------------------------
-strains = subtype
-host_data_list <- lapply(test_ids, 
-                         FUN = make_pomp_data_for_ind, 
-                         demographic_data = demog,
+strains = "pH1N1"
+host_data_list <- lapply(unique(serology$hhid),
+                         FUN = make_pomp_data_for_hh, 
+                         demographic_data = demography,
                          strain_vec = strains,
                          imprinting_data = df_imprinting,
-                         simulate_times = T, # Simulate many observations per indivdiual
-                         n_vis_sim = n_simulated_visits)
+                         simulate_times = T, # Simulate many observations for each individual
+                         n_vis_sim = n_simulated_visits) 
 
-save(host_data_list, test_ids, file = host_data_filename)
+save(host_data_list, file = host_data_filename)

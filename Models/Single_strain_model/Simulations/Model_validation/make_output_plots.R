@@ -5,7 +5,7 @@ require(RSQLite)
 require(reshape2)
 require(lubridate)
 require(dplyr)
-source("../../Utility_scripts/model_functions.R")
+source("../../Utility_scripts/model_functions_hh.R")
 textSize = 12
 source("../../Utility_scripts/plot_themes.R")
 require(pomp)
@@ -22,36 +22,27 @@ this_subtype = "pH1N1" # Choose either "pH1N1" or "H3N2"
 n_strains = 1
 save_plots <- T # Save plots to pdf?
 
-# Load in the simulated host list and simulated output for adults and children 
-pomp_object_filename_adults <- "" # Name of file (".rda") containing pomp object for adults with extra simulated observations
-pomp_object_filename_kids <- "" # Name of file (".rda") containing pomp object for children with extra simulated observations
-model_predictions_filename_adults <- "" # Name of file (".rda") containing model simulations for adults
-model_predictions_filename_kids <- "" # Name of file (".rda") containing model simulations for adults
+# Get the community intensity data 
+intensity_data_tablename <- paste0("community_intensity_", this_subtype)
+dbFilename <- "../../../../Data/Data.sqlite"
+db <- dbConnect(SQLite(), dbFilename)
+intensity_data <- dbReadTable(db, intensity_data_tablename) %>% 
+  mutate(full_date = as.Date(full_date, origin = "1970-1-1"))
+dbDisconnect(db)
 
-load(pomp_object_filename_adults)
+# Load in the simulated host list and simulated output 
+pomp_object_filename <- "../../Inference/FILEAME" # Name of file (".rda" file) containing pomp object. This file is stored in the Inference folder
+model_predictions_filename <- "" # Name of file (".rda") containing model simulations 
+
+load(pomp_object_filename)
 rm(panelObject)
-load(model_predictions_filename_adults)
-titers_adults <- titer_df_all
-titers_adults$child = 0
-infections_adults <- inf_times_df_all
-infections_adults$child = 0
-hosts_adults <- host_data_list
-
-load(pomp_object_filename_kids)
-rm(panelObject)
-load(model_predictions_filename_kids)
-titers_children <- titer_df_all
-titers_children$child = 1
-infections_children <- inf_times_df_all
-infections_children$child = 1
-hosts_children <- host_data_list
-
-inf_times_df_all <- rbind(infections_children, infections_adults)
-titer_df_all <- rbind(titers_children, titers_adults)
-host_data_list <- c(hosts_children, hosts_adults)
+load(model_predictions_filename)
 
 
-## Format data ## ----------------------------------------------------------------------------------------------------------------------------
+## Apply measurement error --------------------------------------------------------------------
+titer_df_all$h_obs_sim = sapply(titer_df_all$h_latent, err_func, thres = 1, sig = 1.2, sig2 = 0.74)
+
+## Format data ##----------------------------------------------------------------------------------------------------------------------------
 
 for( i in c(1:length(host_data_list))){
   n_vis <- nrow(host_data_list[[i]]$y)
@@ -67,11 +58,11 @@ if(length(ind) > 0 ){
 age_vec <- array(NA, length(host_data_list))
 df_demog = data.frame()
 for( i in c(1:length(host_data_list))){
-  age_vec[i] <- as.numeric( host_data_list[[i]]$demog_init["age"])
-  df_demog <- rbind(df_demog, data.frame(ind = i,
+  df_demog <- rbind(df_demog, data.frame(hh= i,
+                                         member = c(1:length(host_data_list[[i]]$demog_init$member)),
                                          first_date = host_data_list[[i]]$dates[1],
                                          last_date = host_data_list[[i]]$dates[length(host_data_list[[i]]$dates)],
-                                         age = host_data_list[[i]]$demog_init["age"])
+                                         age = host_data_list[[i]]$demog_init$age)
   )
 }
 df_demog_kids <- df_demog %>% filter(age <= age_threshold)
@@ -83,12 +74,10 @@ n_sim = max(titer_df_all$sim)
 ## Make plots -------------------------------------------------------------------------------------------------------------------------
 
 ## Distribution of n-fold titer rises:
-fold_rises_children_plot_filename <- paste0("./Output_plots/fold_rises_children_",this_subtype,".pdf")
-fold_rises_adults_plot_filename <- paste0("./Output_plots/fold_rises_adults_",this_subtype,".pdf")
-source("./Plotting_scripts/fold_rises.R")
+fold_rises_plot_filename <- paste0("./Output_plots/fold_rises_",this_subtype,".pdf")
+source("./Plotting_scripts/fold_rises_8_2018.R")
 if(save_plots == T){
-  save_plot(fold_rises_children_plot_filename, p_fold_rises_children , base_width = 6, base_height = 3)
-  save_plot(fold_rises_adults_plot_filename, p_fold_rises_adults , base_width = 6, base_height = 3)
+  save_plot(fold_rises_plot_filename, p_fold_rises , base_width = 6, base_height = 3)
 }
 
 ## Coefficient of titer variation

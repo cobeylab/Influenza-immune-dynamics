@@ -1,43 +1,31 @@
 require(ggplot2)
+theme_set(theme_bw(base_size = 18))
 require(MASS)
 require(RSQLite)
 require(reshape2)
 require(dplyr)
-source("../../Utility_scripts/model_functions_hh.R")
-source("../../../../Imprinting/imprinting_functions.R")
+source(".././Utility_scripts/model_simulation_functions_hh.R")
+textSize = 12
+source(".././Utility_scripts/plot_themes.R")
+require(pomp)
 require(panelPomp)
 select <- dplyr::select
 rename <- dplyr::rename
 summarize <- dplyr::summarise
 contains <- dplyr::contains 
 
-## Set up input and output files  ## ----------------------------------------------------------------------------------------------------------------------------------
-dbFilename <- "../../../../Data/Data.sqlite"
+test_data_filename <- "pomp_data_H1_sim_visits.rda"
+load(test_data_filename)
+pomp_filename <- "panel_object_hh_H1_weight_sim_visits.rda"
+timestep = 5
+#Load in population level data 
+load(".././Data/L_data_H1.rda")
+L_data = L_data_H1
 
-## Specify high-level fixed params -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#contacts<- data.frame(age_participant = c(0,10,20,40,65),
+                      #total = c(1,.953,.746,.751,.562)*7.65)
+source("contact_matrix.R")
 n_strains = 1
-timestep = 2.5
-n_years_initial = 7 # Choose the number of years prior to start of observation period from which to draw last time of infection 
-age_threshold = 15 # Division between children and adults
-test_subtype = "pH1N1"
-calculate_imprinting = T
-imprinting_data_filename = NA # Calculate imprinting probabilities and store file (then can set calculate_imprinting = F)
-pomp_filename <- paste0("panel_object_", test_subtype,"_simulated.rda")
-community_intensity_table_name <- paste0("community_intensity_", test_subtype)
-host_data_filename = paste0("pomp_data_",test_subtype, "_simulated.rda")
-
-## Load in contact matrix ---------------------------------------------------------------------------
-source("../../Utility_scripts/contact_matrix.R")
-
-## ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-## Get community intensity data 
-db <- dbConnect(SQLite(), dbFilename)
-intensity_data <- dbReadTable(db, community_intensity_table_name) %>% 
-  mutate(full_date = as.Date(full_date, origin = "1970-1-1"))
-dbDisconnect(db)
-
-## Load in the file containing the host data list
-load(host_data_filename)
 
 ## Generate test params 
 shared_params <- c(
@@ -52,7 +40,7 @@ shared_params <- c(
   n_strains = 1,
   log_beta_scaled = -2.5,
   n_age_categories = nrow(contacts),
-  age_thres = age_threshold,
+  age_thres = 19,
   alpha_kids = log(1000), # wrong value
   alpha_adults = log(1000),
   phi_kids = 2.102,
@@ -84,7 +72,6 @@ shared_params <- c(
 shared_params[ paste0("age_contact_group_",c(1:nrow(contacts)))] = contacts$age_participant
 shared_params[paste0("beta_community_",c(1:nrow(contacts)))] = contacts$total
 
-# Make sure that individuals have more than one visit for longitudinal data 
 for( i in c(1:length(host_data_list))){
   if(length(unique(host_data_list[[i]]$dates)) <2){
     host_data_list[[i]] <- NA
@@ -98,7 +85,7 @@ if(length(ind) > 0 ){
   host_data_list <- host_data_list[-which(is.na(host_data_list))]
 }
 
-## Generate pomp object ## --------------------------------------------------------------------------------------
+#n_hh <- length(host_data_list)
 hhs <- c(1:length(host_data_list))
 
 host_data_list <- host_data_list[hhs]
@@ -108,7 +95,7 @@ pomp_object_list_complete <-lapply(hhs,
                            test_params = shared_params, 
                            timestep = timestep, 
                            log_transform_titer = F,
-                           n_years_prior = n_years_initial,
+                           n_years_prior = 5,#, as.Date("2003-1-1",origin = "1970-1-1"),
                            L_tol = .00001,
                            MAX_MEMBERS = 5,
                            subtype = "pH1N1")

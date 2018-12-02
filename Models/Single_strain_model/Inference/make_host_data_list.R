@@ -3,6 +3,7 @@ require(MASS)
 require(RSQLite)
 require(reshape2)
 require(dplyr)
+require(lubridate)
 source("../Utility_scripts/model_functions.R")
 source("../Utility_scripts/data_formatting_functions.R")
 source("../../../Imprinting/imprinting_functions.R")
@@ -12,12 +13,13 @@ rename <- dplyr::rename
 summarize <- dplyr::summarise
 contains <- dplyr::contains 
 
+
 ## Set up input and output files  ## ----------------------------------------------------------------------------------------------------------------------------------
 dbFilename <- "../../../Data/Data.sqlite"
 test_subtype = "pH1N1" # Choose between pH1N1 and H3N2
 host_data_filename = paste0("pomp_data_",test_subtype, ".rda")
 calculate_imprinting = T
-imprinting_data_filename = "imprinting_data.rda"
+imprinting_data_filename = "../../../Imprinting/imprinting_data.rda"
 
 #Read in data  
 db <- dbConnect(SQLite(), dbFilename)
@@ -66,13 +68,13 @@ if(!calculate_imprinting){
 }
 
 ## Make list of host data -----------------------------------------------------------------------------------------------------
-strains = test_subtype
-host_data_list <- lapply(unique(serology$memberID), 
-                         FUN = make_pomp_data_for_ind, 
+strains = "pH1N1"
+host_data_list <- lapply(unique(serology$hhid),#unique(serology$hhid), 
+                         FUN = make_pomp_data_for_hh, 
                          demographic_data = demography,
                          strain_vec = strains,
                          imprinting_data = df_imprinting,
                          simulate_times = F, # Do not simulate additional visits for individuals
-                         n_vis_sim = NA) # Number of observations per individual IF simulating data
+                         n_vis_sim = 150) # Number of observations per individual IF simulating data
 
-save(host_data_list, test_ids, file = host_data_filename)
+save(host_data_list, file = host_data_filename)
