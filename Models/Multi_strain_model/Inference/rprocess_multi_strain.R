@@ -1,4 +1,5 @@
 init <- Csnippet("
+                 int N_MEMBERS = n_members;
                  int N_STRAINS = n_strains;
                  int i,j;
                  int z;
