@@ -4,7 +4,7 @@ The worfklow for the model inference is as follows:
 
 1. **Fit the sub-model of the short-term titer dynamics** Navigate to the [Short_term_sub_model](./Short_term_sub_model) directory. Infer the parameters that govern the short-term titer boosting for children and adults with H1N1pdm09 and H3N2. Then, fix these parameters in the full longitudinal models (step 2).
 
-2. **Fit the full single-subtype models of the immune dynamics** Navigate to the [Single_strain_model](./Single_strain_model) directory. First, fit the transmission rate for each subtype to the full data (children and adults combined). Then, infer the parameters that govern the dynamics of protection separately in children and adults. 
+2. **Fit the full single-subtype models of the immune dynamics** Navigate to the [Single_strain_model](./Single_strain_model) directory. First, fit the transmission rate for each subtype to the full data. Then, infer the parameters that govern the dynamics of protection. 
 
 3. **Fit the full multi-subtype model to infer the duration of heterosubtypic protection** Navigate to the [Mulit_strain_model](./Multi_strain_model) directory. Fix the parameters that govern the single-strain dynamics of each subtype based on the output of steps 1 and 2. Then infer the rate of waning of heterosubtypic protection. 
 
