@@ -4,6 +4,7 @@ The model is implemented in R, using an interface with C++ for the dynamic model
 
 # Requirements and Setup 
 The inference code was built and run using R version 3.3.2. R can be downloaded [here](https://www.r-project.org).
+The approximate installation time is one hour.
 The code requires several packages that are not part of the base R installations. After installing R, navigate to the main repository directory and run the `installation.R` script. To run this script from the command line, simply navigate to the directory and execute:
 ```
 R CMD BATCH ./installation.R 
