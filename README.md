@@ -29,6 +29,8 @@ This section outlines the workflow of the analysis used in the manuscript to est
 
 5. **Perform model validation** The next step is to generate plots to compare the simulated data for each individual to the corresponding observed data. Navigate to the  [Single_strain_model](./Models/Single_strain_model/Simulations/Model_Validation and follow the instructions. Output plots will appear as `.pdf` files in the `Output_plots` subdirectory.
 
+6. **Estimate the rate of heterosubtypic protection** The final step is to estimate the rate of waning of heterosubtypic protection using a multi-strain model, fixing the subtype-specific parameters. Therefore, this step must be performed after steps 1-2 have been completed for each subtype. Navigate to the [Multi_strain_model](./Models/Multi_strain_model) directory and follow the instructions to estimate the rate of heterosubtypic immune waning. A detailed overview of the parameter estimation is provided in the next section ("Running the Model to Estimate Parameters").
+
 # Running the Model to Estimate Parameters 
 The [Models](./Models) directory contains the code to run the inference for the sub-model of the short-term titer dynamics, the full model of the longitudinal titer dynamics for either H1N1pdm09 or H3N2, and the two-strain model of heterosubytpic immunity. Each model runs separately from a self-contained sub-directory. Please consult the `README` files in the `Models` directory to guide the workflow for that particular inference. Navigate to the directory corresponding to the model that you wish to run. The underlying dynamic model and the observation model are specified in the `rprocess` R files. The code was written to run each MIF search, or "chain", as a separate process, such that the exploration of the likelihood surface from different starting conditions can be parallelized across computing cores.  Each model directory contains an `example_job_submission.sbatch` script to run parallel MIF searches using a high performance computing cluster. The components of the inference for any particular model are as follows:
 
@@ -42,7 +44,7 @@ The [Models](./Models) directory contains the code to run the inference for the 
 * A `.rda` file that stores the entire MIF chain for the profile point.
 * A `.csv` file containing the output from the search.
 
-## Calculating Confidence Intervals from Likelihood Profiles
+3. Calculating Confidence Intervals from Likelihood Profiles
 Once the profile likelihood search has been completed, select the point of maximum likelihood for each value of the profile parameter to represent the inferred parameter. Then, use the Monte Carlo Adjusted Profile (MCAP) method<sup>2</sup> to calculate a smoothed estimate of the profile and the corresponding 95% confidence interval. A function containing the MCAP algorithm is given in the `model_functions.R` script within the `Utility_scripts` folder of each model subdirectory. 
 
 
