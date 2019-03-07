@@ -44,7 +44,7 @@ The [Models](./Models) directory contains the code to run the inference for the 
 * A `.rda` file that stores the entire MIF chain for the profile point.
 * A `.csv` file containing the output from the search.
 
-3. Calculating Confidence Intervals from Likelihood Profiles
+3. **Calculating Confidence Intervals from Likelihood Profiles**
 Once the profile likelihood search has been completed, select the point of maximum likelihood for each value of the profile parameter to represent the inferred parameter. Then, use the Monte Carlo Adjusted Profile (MCAP) method<sup>2</sup> to calculate a smoothed estimate of the profile and the corresponding 95% confidence interval. A function containing the MCAP algorithm is given in the `model_functions.R` script within the `Utility_scripts` folder of each model subdirectory. 
 
 
