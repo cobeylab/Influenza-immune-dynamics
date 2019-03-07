@@ -35,15 +35,15 @@ Once the profile likelihood search has been completed, select the point of maxim
 ## Overview of Workflow for Subtype-level Analysis 
 This section outlines the workflow of the analysis used in the manuscript to estimate the model parameters and generate the results and figures. Follow these steps separately for each subtype (H3N2 and H1N1pdm09).  
 
-1. ** Fit the sub-model of the short-term post-infection titer dynamics**  The first step of the analysis is to fit the parameters that guide the short-term titer dynamics to the subset of PCR-confirmed infections. These data include the time of PCR-confirmed infection and the immediate pre- and post-infection titers for a subset of individuals. Navigate to the [Short_term_sub_model](./Models/Short_term_sub_model) directory and follow the instructions. 
+1. **Fit the sub-model of the short-term post-infection titer dynamics**  The first step of the analysis is to fit the parameters that guide the short-term titer dynamics to the subset of PCR-confirmed infections. These data include the time of PCR-confirmed infection and the immediate pre- and post-infection titers for a subset of individuals. Navigate to the [Short_term_sub_model](./Models/Short_term_sub_model) directory and follow the instructions. 
 
-2. ** Fit the parameters of the full model to titer data from the entire cohort ** The next step of the analysis is to fit the parameters of the full model to the longitudinal titers from the entire cohort, fixing the parameters associated with short-term titer dynamics that were estimated in step 1. The contribution of HI-correlated and non-HI-correlated protection, the titer waning rate, the 50% protective titer, and the long-term boost after infection are estimated. Navigate to the [Single_strain_model](./Models/Single_strain_model) directory and follow the instructions for parameter estimation. 
+2. **Fit the parameters of the full model to titer data from the entire cohort ** The next step of the analysis is to fit the parameters of the full model to the longitudinal titers from the entire cohort, fixing the parameters associated with short-term titer dynamics that were estimated in step 1. The contribution of HI-correlated and non-HI-correlated protection, the titer waning rate, the 50% protective titer, and the long-term boost after infection are estimated. Navigate to the [Single_strain_model](./Models/Single_strain_model) directory and follow the instructions for parameter estimation. 
 
-3. ** Simulate synthetic data ** After all model parameters have been estimated for a given subtype (steps 1 and 2), the next step is to simulate synthetic data using the best-fit parameters. Navigate to the [Simulations](./Models/Single_strain_model/Simulations) directory and execute the `simulate_data.R` script. 
+3. **Simulate synthetic data** After all model parameters have been estimated for a given subtype (steps 1 and 2), the next step is to simulate synthetic data using the best-fit parameters. Navigate to the [Simulations](./Models/Single_strain_model/Simulations) directory and execute the `simulate_data.R` script. 
 
-4. ** Estimate the duration of protection and epidemic behavior from synthetic data ** 
+4. **Estimate the duration of protection and epidemic behavior from synthetic data** 
 
-5. ** Perform model validation ** 
+5. **Perform model validation** 
 
 
 
