@@ -1,5 +1,5 @@
 
-This directory contains code to estimate the model parameters for a given subtype (either H3N2 or H1N1pdm09), to simulate the latent dynamics of infection, and to perform the model validation. The work-flow follows below. Please refer to the [Introductory page](../) for a step-by-step overview of the manuscript analysis.
+This directory contains code to estimate the model parameters for a given subtype (either H3N2 or H1N1pdm09), to simulate the latent dynamics of infection, and to perform the model validation. The work-flow follows below. Please refer to the [Introductory page](../../) for a step-by-step overview of the manuscript analysis.
 
 1. Perform the model inference (using the code in the `Inference` subdirectory): 
     a. Execute the `make_host_data_list.R` script to generate a list of host data objects
