@@ -1,4 +1,4 @@
-This directory contains all of the code necessary to estimate the parameters of the sub-model of the short-term titer dynamics, to simulate the dynamics from the best-fit sub-model parameters, and to perform model validation. Please refer to the [Introductory page](../../) for a step-by-step overview of the manuscript analysis. Briefly, the worfklow for this directory is as follows:
+This directory contains all of the code necessary to estimate the parameters of the sub-model of the short-term titer dynamics, to simulate the dynamics from the best-fit sub-model parameters, and to perform model validation. Please refer to the [Introductory page](../..) for a step-by-step overview of the manuscript analysis. Briefly, the worfklow for this directory is as follows:
 
 1. Estimate the parameters that guide the short-term post-infection titer dynamics (using the code in the `Inference` subdirectory). 
 
