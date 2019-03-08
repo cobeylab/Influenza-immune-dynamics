@@ -1,6 +1,6 @@
 ## Inference
 
-The worfklow for the model inference is as follows:
+This directory contains all of the code necessary to estimate the parameters of each model, simulate the latent subtype-level infection dynamics, and perform model validation. Please refer to the [Introductory page](../) for a step-by-step overview of the manuscript analysis. Breifly, the worfklow for the model inference is as follows:
 
 1. **Fit the sub-model of the short-term titer dynamics** Navigate to the [Short_term_sub_model](./Short_term_sub_model) directory. Infer the parameters that govern the short-term titer boosting for children and adults with H1N1pdm09 and H3N2. Then, fix these parameters in the full longitudinal models (step 2).
 
