@@ -1,5 +1,5 @@
 
-Use this directory to erform the model inference (using the code in the `Inference` subdirectory). Specifically, estimate the rate of waning of heterosubtypic protection by constructing a likelihood profile. Please refer to the [Introductory page](../) for a step-by-step overview of the manuscript analysis. Briefly, the overview of the inference is as follows: 
+Use this directory to erform the model inference (using the code in the `Inference` subdirectory). Specifically, estimate the rate of waning of heterosubtypic protection by constructing a likelihood profile. Please refer to the [Introductory page](https://github.com/cobeylab/Influenza-immune-dynamics) for a step-by-step overview of the manuscript analysis. Briefly, the overview of the inference is as follows: 
 
 1. Execute the `make_host_data_list.R` script to generate a list of host data objects
 
