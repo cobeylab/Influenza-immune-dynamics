@@ -5,12 +5,16 @@ The model is implemented in R, using an interface with C++ for the dynamic model
 # Requirements and Setup 
 The inference code was built and run using R version 3.3.2. R can be downloaded [here](https://www.r-project.org).
 The approximate installation time is one hour.
+<<<<<<< HEAD
 The code requires several packages that are not part of the base R installations. 
 
 After installing R, navigate to the main Influenza-immune-dynamics repository directory and run the `installation.R` script. 
 
 If you are running *pomp* on a Mac, you will need to first download xcode from the Apple App Store. Note that this file is large (>12GB) and takes several hours to download and install.
 
+=======
+The code requires several packages that are not part of the base R installations. After installing R, navigate to the main Influenza-immune-dynamics repository's directory and run the `installation.R` script.
+>>>>>>> 2465a003ced8f75ab8e472132a1fd64bfc70e54d
 The 14 required packages should now be installed in your R library. 
 
 Before running any of the models, users should familiarize themselves with the *pomp* statistical inference software <sup>1</sup>. A helpful introduction can be found [here](https://kingaa.github.io/pomp/vignettes/getting_started.html).
