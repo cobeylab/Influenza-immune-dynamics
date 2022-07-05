@@ -11,6 +11,8 @@ R CMD BATCH ./installation.R
 ```
 The packages should be installed in your R library. 
 
+## for mac, you will need to download xcode from the app store in order to compile the C++ within the pomp package. 
+
 Before running any of the models, users should familiarize themselves with the *pomp* statistical inference software <sup>1</sup>. A helpful introduction can be found [here](https://kingaa.github.io/pomp/vignettes/getting_started.html).
 
 # Raw data
